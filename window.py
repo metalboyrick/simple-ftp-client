@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import simpledialog
 from model import *
 import socket_lib as sk
+
 
 class MainWindow():
     def __init__(self, window, state_model):
@@ -63,25 +65,80 @@ class MainWindow():
         tk.Grid.rowconfigure(toolbar_frame, 0, weight=1)
         toolbar_frame.pack()
 
-        cwd_text = tk.Label(toolbar_frame, textvariable=self.current_state.cwd)
-        cwd_text.grid(row=0, column=0)
+        # CWD indicator
+        self.display_cwd = tk.StringVar()
+        self.display_cwd.set("CWD: None")
+        self.cwd_text = tk.Label(toolbar_frame, textvariable=self.display_cwd, width=20)
+        self.cwd_text.grid(row=0, column=0)
 
+        # up a folder button
+        self.up_btn = tk.Button(toolbar_frame, text="Go up", command=lambda: self.up_btn_pressed(), width=10)
+        self.up_btn.grid(row=0,column=1)
+
+        # files display
         self.files_box = tk.Listbox(status_box_frame, width=100, height=15)
         self.files_box.pack()
 
-        cli_label = tk.Label(status_box_frame, text="Status: ", height=2, fg='blue') 
-        cli_label.pack()
+        # set up right click menu
+        # right click menu
+        self.rc_menu = tk.Menu(self.files_box, tearoff=0)
+        self.rc_menu.add_command(label="Rename", command=lambda: self.rc_rename())
+        self.rc_menu.add_command(label="Delete", command=lambda: self.rc_delete())
 
-        cli_box = tk.Label(status_box_frame, textvariable=self.current_state.status_bar) 
-        cli_box.pack()
+        # bind right click menu to files_box
+        self.files_box.bind("<Button-3>", lambda event: self.pop_rc_menu(event))
 
+        # Status bar label
+        self.cli_label = tk.Label(status_box_frame, text="Status: ", height=2, fg='blue')
+        self.cli_label.pack()
+
+        # status bar
+        self.cli_box = tk.Label(status_box_frame, textvariable=self.current_state.status_bar)
+        self.cli_box.pack()
+
+    # ============================================ right click options ==============================================
+    # right click menu for file box
+    def pop_rc_menu(self, event):
+        # right click menu only appears if files are the and one file is selected.
+        if len(self.current_state.file_list) > 0 and self.files_box.get(tk.ACTIVE):
+            self.rc_menu.tk_popup(event.x_root, event.y_root)
+
+    # renaming
+    def rc_rename(self):
+        current_filename = self.files_box.get(tk.ACTIVE)
+        index = self.current_state.file_list.index(current_filename)
+        new_name = simpledialog.askstring(title="Rename", prompt="Enter new name")
+
+        sk.rename(self.current_state, current_filename, new_name)
+        self.current_state.file_list[index] = new_name
+
+        self.refresh_list()
+
+    # deleting
+    def rc_delete(self):
+        target_filename = self.files_box.get(tk.ACTIVE)
+        index = self.current_state.file_list.index(target_filename)
+
+        # if it is folder
+        if target_filename.find(".") == -1:
+            sk.delete(self.current_state, target_filename)
+            pass
+        else:
+            return -1
+
+        del self.current_state.file_list[index]
+
+        self.refresh_list()
+        return 0
+
+
+    # updates the file list if any
     def refresh_list(self):
-        i = 1
+        self.files_box.delete(0, tk.END)
         for item in self.current_state.file_list:
-            self.files_box.insert(i, item)
-            i += 1
+            self.files_box.insert(tk.END, item)
 
-    # buttons
+    # ============================================== buttons ========================================================
     def login_btn_pressed(self):
         if self.current_state.conn_status.get() == "NOT CONNECTED":
             messagebox.showerror(title="Error", message="Please connect first!")
@@ -93,14 +150,20 @@ class MainWindow():
 
         user_response, pass_response = sk.login(self.current_state)
 
+        # server responds OK.
         if user_response[0] == "3" and pass_response[0] =="2":
             self.current_state.login_status = LoginStatus.LOGGED_IN
             self.login_btn.configure(bg="green", fg="white", text="Logged in")
+            self.display_cwd.set("CWD: root")
             self.refresh_list()
+
+        # server responds 5XX Error.
         elif user_response[0] == "5" or pass_response[0] == "5":
-            messagebox.showerror(title="Error", message="Incorrect credentials!")  
+            messagebox.showerror(title="Error", message="Authentication failed!")
+
+        # other exceptions
         else:
-            messagebox.showerror(title="Error", message="Cannot login!")  
+            messagebox.showerror(title="Error", message="Unknown Error!")
 
     def connect_btn_pressed(self):
         if self.current_state.conn_status.get() == "CONNECTED":
@@ -144,5 +207,8 @@ class MainWindow():
             self.current_state.conn_mode.set(ConnectionMode.PASV.value)
             messagebox.showerror(title="Error", message="Error! : " + str(error))
             return
+
+    def up_btn_pressed(self):
+        pass
 
 

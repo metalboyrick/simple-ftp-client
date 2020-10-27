@@ -34,7 +34,7 @@ class State():
         self.data_conn_addr = None
         self.pasv_addr = ["", 0]
         self.port_addr = ["", 0]
-        self.cwd = tk.StringVar()
+        self.cwd = ""
 
         # initialise some values
         self.conn_status.set("NOT CONNECTED")

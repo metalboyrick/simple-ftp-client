@@ -44,6 +44,7 @@ def set_pasv(current_state):
     except socket.error as err:
         return 1, err
 
+
 def login(current_state):
     USER_command = ("USER " + current_state.username.get() + "\r\n").encode(FORMAT)
     PASS_command = ("PASS " + current_state.password.get() + "\r\n").encode(FORMAT)
@@ -58,7 +59,10 @@ def login(current_state):
         current_message = current_state.status_bar.get()
         pass_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT)
         current_state.status_bar.set(pass_response.replace("\r\n", "\n"))
-        
+
+        if user_response[0] == "5" or pass_response[0] == "5":
+            return user_response, pass_response
+
         set_pasv(current_state)
 
         get_file_list(current_state)
@@ -75,7 +79,7 @@ def set_port(current_state):
     p2 = port % 256
     info_tuple = ip_addr[0] +","+ ip_addr[1] +","+ ip_addr[2] +","+ ip_addr[3] + "," + str(p1) + "," + str(p2)
     PORT_command = "PORT " + info_tuple + "\r\n"
-    print(PORT_command)
+
     try:
         current_state.socket.sendall(PORT_command.encode(FORMAT))
         port_status = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT)
@@ -107,27 +111,59 @@ def build_data_socket(current_state):
         return 1
 
 
+def format_file(filename):
+    length = len(filename)
+    return filename[57:length]
+
 def get_file_list(current_state):
-    current_state.socket.sendall("LIST\r\n".encode(FORMAT))
+    selected_folder = current_state.cwd
+    current_state.socket.sendall(("LIST" + selected_folder + "\r\n").encode(FORMAT))
     current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))
     # build_data_socket(current_state)
     try:
         
         if current_state.conn_mode.get() == ConnectionMode.PASV.value:
-            print((current_state.pasv_addr[0],current_state.pasv_addr[1]))
             current_state.data_socket.connect((current_state.pasv_addr[0],current_state.pasv_addr[1]))
             current_state.file_list = current_state.data_socket.recv(BUFFER_SIZE).decode(FORMAT).split("\r\n")
             current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))
             current_state.data_socket.close()
-            print(current_state.file_list)
             
         elif current_state.conn_mode.get() == ConnectionMode.PORT.value:
-            current_state.file_list = current_state.data_conn_socket.recv(BUFFER_SIZE).decode(FORMAT).split("\r\n")
+            current_state.file_list = current_state.data_socket.recv(BUFFER_SIZE).decode(FORMAT).split("\r\n")
             current_state.data_conn_socket.close()
             current_state.data_socket.close()
-            print(current_state.file_list)
+
+        i = 0
+        for filename in current_state.file_list:
+            current_state.file_list[i] = format_file(filename)
+            i += 1
 
         return 0
     except socket.error as err:
-        print(err)
         return 1
+
+
+def rename(current_state, old_name, new_name):
+    # set rename from for RNFR
+    current_state.socket.sendall(("RNFR " + old_name + "\r\n").encode(FORMAT))
+    staging_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
+    current_state.status_bar.set(staging_response)
+    if staging_response[0] != "3":
+        return 1
+
+    # set rename to for RNTO
+    current_state.socket.sendall(("RNTO " + new_name + "\r\n").encode(FORMAT))
+    staging_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
+    current_state.status_bar.set(staging_response)
+    if staging_response[0] != "2":
+        return 1
+
+    return 0
+
+
+def delete(current_state, target_filename):
+    current_state.socket.sendall(("RMD " + target_filename + "\r\n").encode(FORMAT))
+    delete_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
+    current_state.status_bar.set(delete_response)
+
+    return 0

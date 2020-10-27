@@ -48,10 +48,7 @@ def main():
     # browse_btn.grid(row=0,column=1)
     # upload_btn.grid(row=0,column=2)
 
-    # # right click menu
-    # rc_menu = tk.Menu(window, tearoff = 0)
-    # rc_menu.add_command(label ="Rename") 
-    # rc_menu.add_command(label ="Delete")  
+
 
     
 
