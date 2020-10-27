@@ -19,15 +19,16 @@ class State():
         self.password = tk.StringVar()
         self.ip_addr = tk.StringVar()
         self.conn_status = tk.StringVar()
-        self.login_status = tk.IntVar()
+        self.login_status = LoginStatus.LOGGED_OUT
         self.port = tk.IntVar()
         self.conn_mode = tk.IntVar()
         self.file_list = []
         self.status_bar = tk.StringVar()
         self.upload_path = tk.StringVar()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.pasv_addr = ["", 0]
+        self.port_addr = ["", 0]
 
         # initialise some values
-        self.login_status.set(LoginStatus.LOGGED_IN)
         self.conn_status.set("NOT CONNECTED")
         self.conn_mode.set(ConnectionMode.PASV)
