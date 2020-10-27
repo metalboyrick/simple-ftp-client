@@ -1,6 +1,6 @@
 import tkinter as tk
 from model import *
-from gui_login import * 
+from window import * 
 
 def main():
     
@@ -14,30 +14,13 @@ def main():
     # initialise state object
     current_state = State()
 
-    # login section
-    login_section = LoginSection(window, current_state)
+    main_window = MainWindow(window, current_state)
 
     # run application event loop
     window.mainloop()
 
 
-    # # STATUS BOXES
-    # status_box_frame = tk.Frame(window)
-    # tk.Grid.rowconfigure(status_box_frame, 0, weight=1)
-    # status_box_frame.pack()
-
-    # cwd = tk.StringVar()
-    # cwd_text = tk.Label(status_box_frame, textvariable=cwd)
-    # cwd_text.pack()
-
-    # files_box = tk.Listbox(status_box_frame, width=100, height=15)
-    # files_box.pack()
-
-    # cli_label = tk.Label(status_box_frame, text="Status: ") 
-    # cli_label.pack()
-
-    # cli_box = tk.Text(status_box_frame, state=tk.DISABLED,width=100, height=5)
-    # cli_box.pack()
+    
 
     # # FOOTER
     # # download segment

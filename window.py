@@ -3,7 +3,7 @@ from tkinter import messagebox
 from model import *
 import socket_lib as sk
 
-class LoginSection():
+class MainWindow():
     def __init__(self, window, state_model):
         self.current_state = state_model
 
@@ -44,8 +44,8 @@ class LoginSection():
         self.connect_btn.grid(row=0, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
 
         # radio buttons
-        self.pasv_rbtn = tk.Radiobutton(login_button_frame, text="PASV", variable=self.current_state.conn_mode, value=ConnectionMode.PASV, command=lambda: self.pasv_rbtn_pressed())
-        self.port_rbtn = tk.Radiobutton(login_button_frame, text="PORT", variable=self.current_state.conn_mode, value=ConnectionMode.PORT, command=lambda: self.port_rbtn_pressed())
+        self.pasv_rbtn = tk.Radiobutton(login_button_frame, text="PASV", variable=self.current_state.conn_mode, value=ConnectionMode.PASV.value, command=lambda: self.pasv_rbtn_pressed())
+        self.port_rbtn = tk.Radiobutton(login_button_frame, text="PORT", variable=self.current_state.conn_mode, value=ConnectionMode.PORT.value, command=lambda: self.port_rbtn_pressed())
 
         self.pasv_rbtn.grid(row=1, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
         self.port_rbtn.grid(row=1, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
@@ -53,6 +53,33 @@ class LoginSection():
         # connection status
         self.connect_status_text = tk.Label(login_button_frame, textvariable=self.current_state.conn_status, fg="red")
         self.connect_status_text.grid(row=1, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
+
+        # # STATUS BOXES
+        status_box_frame = tk.Frame(window)
+        tk.Grid.rowconfigure(status_box_frame, 0, weight=1)
+        status_box_frame.pack()
+
+        toolbar_frame = tk.Frame(status_box_frame)
+        tk.Grid.rowconfigure(toolbar_frame, 0, weight=1)
+        toolbar_frame.pack()
+
+        cwd_text = tk.Label(toolbar_frame, textvariable=self.current_state.cwd)
+        cwd_text.grid(row=0, column=0)
+
+        self.files_box = tk.Listbox(status_box_frame, width=100, height=15)
+        self.files_box.pack()
+
+        cli_label = tk.Label(status_box_frame, text="Status: ", height=2, fg='blue') 
+        cli_label.pack()
+
+        cli_box = tk.Label(status_box_frame, textvariable=self.current_state.status_bar) 
+        cli_box.pack()
+
+    def refresh_list(self):
+        i = 1
+        for item in self.current_state.file_list:
+            self.files_box.insert(i, item)
+            i += 1
 
     # buttons
     def login_btn_pressed(self):
@@ -69,6 +96,7 @@ class LoginSection():
         if user_response[0] == "3" and pass_response[0] =="2":
             self.current_state.login_status = LoginStatus.LOGGED_IN
             self.login_btn.configure(bg="green", fg="white", text="Logged in")
+            self.refresh_list()
         elif user_response[0] == "5" or pass_response[0] == "5":
             messagebox.showerror(title="Error", message="Incorrect credentials!")  
         else:
@@ -82,14 +110,10 @@ class LoginSection():
         if not sk.connect(self.current_state):
             self.current_state.conn_status.set("CONNECTED")
             self.connect_status_text.configure(fg="green")
-            self.current_state.pasv_addr[0] = self.current_state.ip_addr
-            self.current_state.port_addr[0] = self.current_state.ip_addr
         else:
             messagebox.showerror(title="Error", message="Cannot connect to server!")
         
     def pasv_rbtn_pressed(self):
-        print("PASV")
-
         if self.current_state.conn_status.get() == "NOT CONNECTED":
             messagebox.showerror(title="Error", message="Please connect first!")
             return
@@ -100,10 +124,9 @@ class LoginSection():
 
         func_res, error = sk.set_pasv(self.current_state)
 
-        if not func_res:
-            self.current_state.conn_mode.set(ConnectionMode.PASV)
-        else:
-            messagebox.showerror(title="Error", message="Error! : " + error)
+        if func_res:
+            self.current_state.conn_mode.set(ConnectionMode.PORT.value)
+            messagebox.showerror(title="Error", message="Error! : " + str(error))
             return
 
     def port_rbtn_pressed(self):
@@ -117,9 +140,9 @@ class LoginSection():
 
         func_res, error = sk.set_port(self.current_state)
 
-        if not func_res:
-            self.current_state.conn_mode.set(ConnectionMode.PORT)
-        else:
-            messagebox.showerror(title="Error", message="Error! : " + error)
+        if func_res:
+            self.current_state.conn_mode.set(ConnectionMode.PASV.value)
+            messagebox.showerror(title="Error", message="Error! : " + str(error))
             return
-        pass
+
+
