@@ -149,21 +149,19 @@ def rename(current_state, old_name, new_name):
     staging_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
     current_state.status_bar.set(staging_response)
     if staging_response[0] != "3":
-        return 1
+        raise Exception("Rename error !")
 
     # set rename to for RNTO
     current_state.socket.sendall(("RNTO " + new_name + "\r\n").encode(FORMAT))
     staging_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
     current_state.status_bar.set(staging_response)
     if staging_response[0] != "2":
-        return 1
-
-    return 0
+        raise Exception("Rename error !")
 
 
 def delete(current_state, target_filename):
     current_state.socket.sendall(("RMD " + target_filename + "\r\n").encode(FORMAT))
     delete_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
     current_state.status_bar.set(delete_response)
-
-    return 0
+    if delete_response[0] != "2":
+        raise Exception("Delete error!")

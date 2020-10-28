@@ -109,7 +109,14 @@ class MainWindow():
         index = self.current_state.file_list.index(current_filename)
         new_name = simpledialog.askstring(title="Rename", prompt="Enter new name")
 
-        sk.rename(self.current_state, current_filename, new_name)
+        if not new_name:
+            return
+
+        try:
+            sk.rename(self.current_state, current_filename, new_name)
+        except Exception as err:
+            messagebox.showerror(title="Error", message="Error renaming!: " + str(err))
+
         self.current_state.file_list[index] = new_name
 
         self.refresh_list()
@@ -121,16 +128,16 @@ class MainWindow():
 
         # if it is folder
         if target_filename.find(".") == -1:
-            sk.delete(self.current_state, target_filename)
-            pass
+            try:
+                sk.delete(self.current_state, target_filename)
+            except Exception as err:
+                messagebox.showerror(title="Error", message="Error deleting!: " + str(err))
         else:
-            return -1
+            messagebox.showerror(title="Error", message="Non-folder deletions are currently unsupported.")
 
         del self.current_state.file_list[index]
 
         self.refresh_list()
-        return 0
-
 
     # updates the file list if any
     def refresh_list(self):
