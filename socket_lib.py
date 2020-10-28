@@ -1,5 +1,6 @@
 import socket
 import random
+import re
 from model import *
 
 BUFFER_SIZE = 8192
@@ -139,8 +140,6 @@ def get_file_list(current_state):
         i += 1
 
 
-
-
 def rename(current_state, old_name, new_name):
     # set rename from for RNFR
     current_state.socket.sendall(("RNFR " + old_name + "\r\n").encode(FORMAT))
@@ -163,3 +162,29 @@ def delete(current_state, target_filename):
     current_state.status_bar.set(delete_response)
     if delete_response[0] != "2":
         raise Exception("Delete error!")
+
+
+def goto_folder(current_state, target_filename):
+    # go to new CWD
+    current_state.socket.sendall(("CWD " + target_filename + "\r\n").encode(FORMAT))
+    cwd_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
+    current_state.status_bar.set(cwd_response)
+    if cwd_response[0] != "2":
+        raise Exception("Navigating error !")
+
+    # get new cwd
+    current_state.socket.sendall("PWD\r\n".encode(FORMAT))
+    pwd_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
+    current_state.status_bar.set(pwd_response)
+
+    # record the path name within the state model
+    path_name = re.findall(r'\"(.+?)\"', pwd_response)
+    current_state.cwd = path_name
+
+    # get file list
+    get_file_list(current_state)
+
+
+
+
+

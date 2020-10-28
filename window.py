@@ -69,15 +69,16 @@ class MainWindow():
         self.display_cwd = tk.StringVar()
         self.display_cwd.set("CWD: None")
         self.cwd_text = tk.Label(toolbar_frame, textvariable=self.display_cwd, width=20)
-        self.cwd_text.grid(row=0, column=0)
+        self.cwd_text.grid(row=0, column=0, sticky=tk.E)
 
         # up a folder button
         self.up_btn = tk.Button(toolbar_frame, text="Go up", command=lambda: self.up_btn_pressed(), width=10)
-        self.up_btn.grid(row=0,column=1)
+        self.up_btn.grid(row=0, column=1, sticky=tk.W)
 
         # files display
         self.files_box = tk.Listbox(status_box_frame, width=100, height=15)
         self.files_box.pack()
+        self.files_box.bind("<Double-1>", lambda event: self.goto_folder())
 
         # set up right click menu
         # right click menu
@@ -136,6 +137,20 @@ class MainWindow():
             messagebox.showerror(title="Error", message="Non-folder deletions are currently unsupported.")
 
         del self.current_state.file_list[index]
+
+        self.refresh_list()
+
+    # ============================================= double click ====================================================
+
+    def goto_folder(self):
+        target_filename = self.files_box.get(tk.ACTIVE)
+        if target_filename.find(".") == -1:
+            try:
+                sk.goto_folder(self.current_state, target_filename)
+            except Exception as err:
+                messagebox.showerror(title="Error", message="Error navigating!: " + str(err))
+        else:
+            messagebox.showerror(title="Error", message="Please select a folder.")
 
         self.refresh_list()
 
