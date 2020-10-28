@@ -152,6 +152,8 @@ class MainWindow():
         else:
             messagebox.showerror(title="Error", message="Please select a folder.")
 
+        self.display_cwd.set("CWD: " + self.current_state.cwd)
+
         self.refresh_list()
 
     # updates the file list if any
@@ -176,7 +178,7 @@ class MainWindow():
         if user_response[0] == "3" and pass_response[0] =="2":
             self.current_state.login_status = LoginStatus.LOGGED_IN
             self.login_btn.configure(bg="green", fg="white", text="Logged in")
-            self.display_cwd.set("CWD: root")
+            self.display_cwd.set("CWD: /")
             self.refresh_list()
 
         # server responds 5XX Error.
@@ -231,6 +233,25 @@ class MainWindow():
             return
 
     def up_btn_pressed(self):
-        pass
+
+        if self.current_state.conn_status.get() == "NOT CONNECTED":
+            messagebox.showerror(title="Error", message="Please connect first!")
+            return
+
+        if self.current_state.login_status != LoginStatus.LOGGED_IN:
+            messagebox.showerror(title="Error", message="Please log in first!")
+            return
+
+        if self.current_state.cwd == "/":
+            messagebox.showerror(title="Error", message="You are on root!")
+
+        try:
+            sk.goto_folder(self.current_state, "..")
+        except Exception as err:
+            messagebox.showerror(title="Error", message="Error navigating!: " + str(err))
+
+        self.display_cwd.set("CWD: " + self.current_state.cwd)
+
+        self.refresh_list()
 
 

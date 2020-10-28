@@ -179,7 +179,7 @@ def goto_folder(current_state, target_filename):
 
     # record the path name within the state model
     path_name = re.findall(r'\"(.+?)\"', pwd_response)
-    current_state.cwd = path_name
+    current_state.cwd = path_name[0]
 
     # get file list
     get_file_list(current_state)
