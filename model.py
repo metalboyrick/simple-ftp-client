@@ -39,3 +39,9 @@ class State():
         # initialise some values
         self.conn_status.set("NOT CONNECTED")
         self.conn_mode.set(ConnectionMode.PASV)
+
+        # some test values
+        self.username.set("android")
+        self.password.set("android")
+        self.ip_addr.set("192.168.5.8")
+        self.port.set(8080)
