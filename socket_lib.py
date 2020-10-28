@@ -295,4 +295,15 @@ def download(current_state, filename, destination, bar):
     close_data_socket(current_state)
 
 
+def disconnect(current_state):
+    current_state.socket.sendall("QUIT\r\n".encode(FORMAT))
+    quit_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
+    current_state.status_bar.set(quit_response)
 
+    close_data_socket(current_state)
+    close_global_socket(current_state)
+
+
+def destroy(current_state):
+    current_state.socket.close()
+    current_state.data_socket.close()

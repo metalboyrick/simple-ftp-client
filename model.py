@@ -27,15 +27,11 @@ class State():
         self.conn_mode = tk.IntVar()
         self.file_list = []
         self.status_bar = tk.StringVar()
-        self.upload_path = tk.StringVar()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.data_conn_socket = None
-        self.data_conn_addr = None
         self.pasv_addr = ["", 0]
         self.port_addr = ["", 0]
         self.cwd = ""
-        self.trf_progress = tk.DoubleVar()
 
         # initialise some values
         self.conn_status.set("NOT CONNECTED")

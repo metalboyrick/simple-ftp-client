@@ -1,9 +1,10 @@
 import tkinter as tk
 from model import *
-from window import * 
+from window import *
+from socket_lib import *
+
 
 def main():
-    
 
     # initialise tk object
     window = tk.Tk()
@@ -14,6 +15,10 @@ def main():
     # initialise state object
     current_state = State()
 
+    # bind exit script
+    window.bind('<Destroy>', lambda e: sk.destroy(current_state))
+
+    # run class
     main_window = MainWindow(window, current_state)
 
     # run application event loop

@@ -44,8 +44,11 @@ class MainWindow():
 
         self.login_btn = tk.Button(login_button_frame, text="Login", command=lambda: self.login_btn_pressed(), width=20)
         self.connect_btn = tk.Button(login_button_frame, text="Connect", command=lambda: self.connect_btn_pressed(), width=20)
+        self.disconnect_btn = tk.Button(login_button_frame, text="Disconnect", command=lambda: self.disconnect_btn_pressed(),
+                                     width=20)
         self.login_btn.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
-        self.connect_btn.grid(row=0, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.connect_btn.grid(row=0, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        self.disconnect_btn.grid(row=0, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
 
         # radio buttons
         self.current_state.conn_mode.set(0)
@@ -102,8 +105,6 @@ class MainWindow():
 
         # bind right click menu to files_box
         self.files_box.bind("<Button-3>", lambda event: self.pop_rc_menu(event))
-
-
 
         # Status bar label
         self.cli_label = tk.Label(status_box_frame, text="Status: ", height=2, fg='blue')
@@ -357,5 +358,21 @@ class MainWindow():
 
         messagebox.showinfo("Server specifications", sk.view_specs(self.current_state))
 
+    def disconnect_btn_pressed(self):
+        if self.current_state.conn_status.get() == "NOT CONNECTED":
+            messagebox.showerror(title="Error", message="You are not connected!")
+            return
 
+        try:
+            sk.disconnect(self.current_state)
+        except Exception as err:
+            messagebox.showerror("Error", str(err))
+
+        self.current_state.cwd = ""
+        self.display_cwd.set("CWD: None")
+        self.current_state.file_list = []
+        self.current_state.conn_status.set("NOT CONNECTED")
+        self.connect_status_text.configure(fg="red")
+
+        self.refresh_list()
 
