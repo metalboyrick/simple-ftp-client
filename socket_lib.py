@@ -3,7 +3,7 @@ import random
 import re
 from model import *
 
-BUFFER_SIZE = 8192
+BUFFER_SIZE = 2048
 FORMAT = 'utf-8'
 HOST = socket.gethostbyname(socket.gethostname())
 
@@ -12,7 +12,8 @@ def connect(current_state):
     port = current_state.port.get()
     try:
         current_state.socket.connect((ip_addr, port))
-        current_state.socket.recv(BUFFER_SIZE).decode(FORMAT)
+        welcome_msg = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT)
+        current_state.status_bar.set(welcome_msg)
         current_state.pasv_addr[0] = current_state.ip_addr.get()
         current_state.port_addr[0] = HOST
         return 0
@@ -54,19 +55,19 @@ def connect_data_socket(current_state):
         # connect to data socket
         current_state.data_socket.connect((ip, port))
 
-    if current_state.conn_mode == ConnectionMode.PORT.value:
+    elif current_state.conn_mode == ConnectionMode.PORT.value:
         # pick a port
-        current_state.data_socket.bind('', 0)
+        current_state.data_socket.bind(('', 0))
         _, port = current_state.data_socket.getsockname()
 
         # listen to picked port
-        current_state.data_socket.listen(1)
+        current_state.data_socket.listen()
 
         # format port
         ip_addr = HOST.replace('.', ',')
         p1 = port // 256
         p2 = port % 256
-        info_tuple = ip_addr[0] + "," + ip_addr[1] + "," + ip_addr[2] + "," + ip_addr[3] + "," + str(p1) + "," + str(p2)
+        info_tuple = ip_addr + "," + str(p1) + "," + str(p2)
         PORT_command = "PORT " + info_tuple + "\r\n"
 
         # pass PORT command
@@ -185,6 +186,13 @@ def goto_folder(current_state, target_filename):
     get_file_list(current_state)
 
 
+def new_folder(current_state, new_folder_name):
+    current_state.socket.sendall(("MKD " + new_folder_name + "\r\n").encode(FORMAT))
+    make_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
+    current_state.status_bar.set(make_response)
+    if make_response[0] != "2":
+        raise Exception("Make folder error!")
 
+    get_file_list(current_state)
 
 

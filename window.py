@@ -46,6 +46,7 @@ class MainWindow():
         self.connect_btn.grid(row=0, column=2, sticky=tk.N+tk.S+tk.E+tk.W)
 
         # radio buttons
+        self.current_state.conn_mode.set(0)
         self.pasv_rbtn = tk.Radiobutton(login_button_frame, text="PASV", variable=self.current_state.conn_mode, value=ConnectionMode.PASV.value, command=lambda: self.pasv_rbtn_pressed())
         self.port_rbtn = tk.Radiobutton(login_button_frame, text="PORT", variable=self.current_state.conn_mode, value=ConnectionMode.PORT.value, command=lambda: self.port_rbtn_pressed())
 
@@ -96,6 +97,29 @@ class MainWindow():
         # status bar
         self.cli_box = tk.Label(status_box_frame, textvariable=self.current_state.status_bar)
         self.cli_box.pack()
+
+        # FOOTER
+        # download segment
+        self.download_button_frame = tk.Frame(window)
+        tk.Grid.rowconfigure(self.download_button_frame, 0, weight=1)
+        self.download_button_frame.pack()
+
+        self.download_btn = tk.Button(self.download_button_frame, text="Download", command=lambda: self.download_btn_pressed(), width=30)
+        self.newfolder_btn = tk.Button(self.download_button_frame, text="New folder", command=lambda: self.newfolder_btn_pressed(), width=30)
+        self.download_btn.grid(row=0, column=0)
+        self.newfolder_btn.grid(row=0, column=1)
+
+        # upload segment
+        self.upload_button_frame = tk.Frame(window)
+        tk.Grid.rowconfigure(self.upload_button_frame, 0, weight=1)
+        self.upload_button_frame.pack()
+
+        self.browse_form = tk.Entry(self.upload_button_frame, textvariable=self.current_state.upload_path, width=30)
+        self.browse_btn = tk.Button(self.upload_button_frame, text="Browse", command=lambda: self.browse_btn_pressed())
+        self.upload_btn = tk.Button(self.upload_button_frame, text="Upload", command=lambda: self.upload_btn_pressed())
+        self.browse_form.grid(row=0,column=0)
+        self.browse_btn.grid(row=0,column=1)
+        self.upload_btn.grid(row=0,column=2)
 
     # ============================================ right click options ==============================================
     # right click menu for file box
@@ -209,12 +233,8 @@ class MainWindow():
             messagebox.showerror(title="Error", message="Please log in first!")
             return
 
-        func_res, error = sk.set_pasv(self.current_state)
+        sk.set_pasv(self.current_state)
 
-        if func_res:
-            self.current_state.conn_mode.set(ConnectionMode.PORT.value)
-            messagebox.showerror(title="Error", message="Error! : " + str(error))
-            return
 
     def port_rbtn_pressed(self):
         if self.current_state.conn_status.get() == "NOT CONNECTED":
@@ -225,12 +245,7 @@ class MainWindow():
             messagebox.showerror(title="Error", message="Please log in first!")
             return
 
-        func_res, error = sk.set_port(self.current_state)
-
-        if func_res:
-            self.current_state.conn_mode.set(ConnectionMode.PASV.value)
-            messagebox.showerror(title="Error", message="Error! : " + str(error))
-            return
+        sk.set_port(self.current_state)
 
     def up_btn_pressed(self):
 
@@ -253,5 +268,39 @@ class MainWindow():
         self.display_cwd.set("CWD: " + self.current_state.cwd)
 
         self.refresh_list()
+
+    def newfolder_btn_pressed(self):
+
+        if self.current_state.conn_status.get() == "NOT CONNECTED":
+            messagebox.showerror(title="Error", message="Please connect first!")
+            return
+
+        if self.current_state.login_status != LoginStatus.LOGGED_IN:
+            messagebox.showerror(title="Error", message="Please log in first!")
+            return
+
+        # get new folder name
+        new_folder = simpledialog.askstring(title="New folder", prompt="Enter new folder name")
+        if not new_folder:
+            return
+
+        try:
+            sk.new_folder(self.current_state, new_folder)
+        except Exception as err:
+            messagebox.showerror("Error", str(err))
+
+        self.refresh_list()
+
+
+
+    def download_btn_pressed(self):
+        pass
+
+    def upload_btn_pressed(self):
+        pass
+
+    def browse_btn_pressed(self):
+        pass
+
 
 
