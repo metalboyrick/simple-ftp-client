@@ -35,6 +35,7 @@ class State():
         self.pasv_addr = ["", 0]
         self.port_addr = ["", 0]
         self.cwd = ""
+        self.trf_progress = tk.DoubleVar()
 
         # initialise some values
         self.conn_status.set("NOT CONNECTED")
@@ -43,5 +44,5 @@ class State():
         # some test values
         self.username.set("android")
         self.password.set("android")
-        self.ip_addr.set("192.168.5.8")
-        self.port.set(8080)
+        self.ip_addr.set("172.17.240.113")
+        self.port.set(21)
