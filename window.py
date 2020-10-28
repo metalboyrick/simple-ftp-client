@@ -64,6 +64,10 @@ class MainWindow():
         tk.Grid.rowconfigure(status_box_frame, 0, weight=1)
         status_box_frame.pack()
 
+        listbox_frame = tk.Frame(status_box_frame)
+        tk.Grid.rowconfigure(listbox_frame, 0, weight=1)
+        listbox_frame.pack()
+
         toolbar_frame = tk.Frame(status_box_frame)
         tk.Grid.rowconfigure(toolbar_frame, 0, weight=1)
         toolbar_frame.pack()
@@ -78,9 +82,16 @@ class MainWindow():
         self.up_btn = tk.Button(toolbar_frame, text="Go up", command=lambda: self.up_btn_pressed(), width=10)
         self.up_btn.grid(row=0, column=1, sticky=tk.W)
 
+        # scrollbar
+        self.scrollbar = tk.Scrollbar(listbox_frame, orient=tk.VERTICAL)
+
         # files display
-        self.files_box = tk.Listbox(status_box_frame, width=100, height=15)
+        self.files_box = tk.Listbox(listbox_frame, width=100, height=15, yscrollcommand=self.scrollbar.set)
+        self.scrollbar.configure(command=self.files_box.yview)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.files_box.pack()
+
+        # select
         self.files_box.bind("<Double-1>", lambda event: self.goto_folder())
 
         # set up right click menu
@@ -91,6 +102,8 @@ class MainWindow():
 
         # bind right click menu to files_box
         self.files_box.bind("<Button-3>", lambda event: self.pop_rc_menu(event))
+
+
 
         # Status bar label
         self.cli_label = tk.Label(status_box_frame, text="Status: ", height=2, fg='blue')
@@ -122,9 +135,6 @@ class MainWindow():
 
         self.upload_btn = tk.Button(self.upload_button_frame, text="Upload", command=lambda: self.upload_btn_pressed(), width=30)
         self.upload_btn.grid(row=0,column=1)
-
-        self.trf_progress = ttk.Progressbar(window, orient=tk.HORIZONTAL, length=200, mode="determinate")
-        self.trf_progress.pack(pady=20)
 
     # ============================================ right click options ==============================================
     # right click menu for file box
@@ -317,10 +327,24 @@ class MainWindow():
         except Exception as err:
             messagebox.showerror("Error", str(err))
 
-        pass
-
     def upload_btn_pressed(self):
-        pass
+
+        if self.current_state.conn_status.get() == "NOT CONNECTED":
+            messagebox.showerror(title="Error", message="Please connect first!")
+            return
+
+        if self.current_state.login_status != LoginStatus.LOGGED_IN:
+            messagebox.showerror(title="Error", message="Please log in first!")
+            return
+
+        filename = filedialog.askopenfilename()
+
+        try:
+            sk.upload(self.current_state, filename)
+        except Exception as err:
+            messagebox.showerror("Error", str(err))
+
+        self.refresh_list()
 
     def specs_btn_pressed(self):
         if self.current_state.conn_status.get() == "NOT CONNECTED":

@@ -44,5 +44,5 @@ class State():
         # some test values
         self.username.set("android")
         self.password.set("android")
-        self.ip_addr.set("172.17.240.113")
-        self.port.set(21)
+        self.ip_addr.set("192.168.5.8")
+        self.port.set(6969)

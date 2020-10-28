@@ -225,8 +225,43 @@ def view_specs(current_state):
 
     return syst_response
 
-def upload(current_state):
-    pass
+def upload(current_state, filename):
+    # connect to data socket
+    connect_data_socket(current_state)
+
+    get_file = filename.split("/")
+
+    # send command to notify servers
+    current_state.socket.sendall(("STOR " + get_file[-1] + "\r\n").encode(FORMAT))
+    current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))
+
+    # accept connections if PORT
+    if current_state.conn_mode == ConnectionMode.PORT.value:
+        conn, addr = current_state.data_socket.accept()
+        current_state.data_socket = conn
+        current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))
+
+    total_data = []
+
+    filename = filename.replace('/', '\\')
+
+    with open(filename, 'rb') as f:
+        try:
+            while True:
+                chunk = f.read(BUFFER_SIZE)
+                total_data.append(chunk)
+                if not chunk:
+                    break
+        except:
+            raise Exception("File read error!")
+
+    for section in total_data:
+        current_state.data_socket.sendall(section)
+
+    close_data_socket(current_state)
+
+    get_file_list(current_state)
+
 
 def download(current_state, filename, destination, bar):
     # connect to data socket
@@ -243,27 +278,19 @@ def download(current_state, filename, destination, bar):
         current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))
 
     total_data = []
-    i = 0
     while True:
         data = current_state.data_socket.recv(BUFFER_SIZE)
         total_data.append(data)
-        print("downloaded " + str(i) + " chunks")
-        i += 1
         if not data:
             break
 
     destination = destination.replace('/', '\\')
-    progress_units = 100 / len(total_data)
-    total = len(total_data)
+
     # write to file
     with open(os.path.join(destination, filename), 'wb') as f:
 
         for chunks in total_data:
             f.write(chunks)
-            bar["value"] += progress_units
-
-
-    bar["value"] = 0
 
     close_data_socket(current_state)
 
