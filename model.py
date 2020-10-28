@@ -9,7 +9,7 @@ class LoginStatus(enum.Enum):
     LOGGED_IN = 1
 
 
-class ConnectionMode(enum.Enum):
+class ConnectionMode():
     PASV = 0
     PORT = 1
 

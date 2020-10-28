@@ -16,7 +16,7 @@ def main():
     current_state = State()
 
     # bind exit script
-    window.bind('<Destroy>', lambda e: sk.destroy(current_state))
+    # s
 
     # run class
     main_window = MainWindow(window, current_state)

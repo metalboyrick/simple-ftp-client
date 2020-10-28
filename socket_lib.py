@@ -8,20 +8,21 @@ BUFFER_SIZE = 32768
 FORMAT = 'utf-8'
 HOST_IP = None
 
+
 def get_host_ip():
-    return "127.0.0.1"
-#     global HOST_IP
-#     if not HOST_IP:
-#         try:
-#             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#             s.connect(('8.8.8.8', 80))
-#             ip = s.getsockname()[0]
-#             HOST_IP = ip
-#             return HOST_IP
-#         finally:
-#             s.close()
-#     else:
-#         return HOST_IP
+    global HOST_IP
+    if not HOST_IP:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(('8.8.8.8', 80))
+            ip = s.getsockname()[0]
+            HOST_IP = ip
+            return ip
+        finally:
+            s.close()
+    else:
+        return HOST_IP
+
 
 def connect(current_state):
     ip_addr = current_state.ip_addr.get()
@@ -30,7 +31,7 @@ def connect(current_state):
         current_state.socket.connect((ip_addr, port))
         welcome_msg = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT)
         current_state.status_bar.set(welcome_msg)
-        current_state.pasv_addr[0] = current_state.ip_addr.get()
+        current_state.pasv_addr[0] = ip_addr
         current_state.port_addr[0] = get_host_ip()
         return 0
     except socket.error as err:
@@ -52,7 +53,7 @@ def close_data_socket(current_state):
 
 
 def connect_data_socket(current_state):
-    if current_state.conn_mode == ConnectionMode.PASV.value:
+    if current_state.conn_mode.get() == ConnectionMode.PASV:
 
         # send pasv request
         current_state.socket.sendall("PASV\r\n".encode(FORMAT))
@@ -71,7 +72,7 @@ def connect_data_socket(current_state):
         # connect to data socket
         current_state.data_socket.connect((ip, port))
 
-    elif current_state.conn_mode == ConnectionMode.PORT.value:
+    elif current_state.conn_mode.get() == ConnectionMode.PORT:
         # pick a port
         current_state.data_socket.bind(('', 0))
         ip, port = current_state.data_socket.getsockname()
@@ -89,15 +90,15 @@ def connect_data_socket(current_state):
         # pass PORT command
         current_state.socket.sendall(PORT_command.encode(FORMAT))
         port_status = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT)
-        current_state.status_bar.set(port_status.replace("\r\n", "\n"))
+        current_state.status_bar.set(port_status.replace("\r\n", ""))
 
 
 def set_pasv(current_state):
-    current_state.conn_mode = ConnectionMode.PASV.value
+    current_state.conn_mode.set(ConnectionMode.PASV)
 
 
 def set_port(current_state):
-    current_state.conn_mode = ConnectionMode.PORT.value
+    current_state.conn_mode.set(ConnectionMode.PORT)
 
 
 def login(current_state):
@@ -149,12 +150,13 @@ def get_file_list(current_state):
     current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))
 
     # accept connections
-    if current_state.conn_mode == ConnectionMode.PORT.value:
+    if current_state.conn_mode.get() == ConnectionMode.PORT:
         conn, addr = current_state.data_socket.accept()
         current_state.data_socket = conn
 
     current_state.file_list = current_state.data_socket.recv(BUFFER_SIZE).decode(FORMAT).split("\r\n")
-    current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))
+    file_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
+    current_state.status_bar.set(file_response)
 
     close_data_socket(current_state)
 
@@ -236,7 +238,7 @@ def upload(current_state, filename):
     current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))
 
     # accept connections if PORT
-    if current_state.conn_mode == ConnectionMode.PORT.value:
+    if current_state.conn_mode.get() == ConnectionMode.PORT:
         conn, addr = current_state.data_socket.accept()
         current_state.data_socket = conn
         current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))
@@ -263,7 +265,7 @@ def upload(current_state, filename):
     get_file_list(current_state)
 
 
-def download(current_state, filename, destination, bar):
+def download(current_state, filename, destination):
     # connect to data socket
     connect_data_socket(current_state)
 
@@ -272,7 +274,7 @@ def download(current_state, filename, destination, bar):
     current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))
 
     # accept connections if PORT
-    if current_state.conn_mode == ConnectionMode.PORT.value:
+    if current_state.conn_mode.get() == ConnectionMode.PORT:
         conn, addr = current_state.data_socket.accept()
         current_state.data_socket = conn
         current_state.status_bar.set(current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", ""))

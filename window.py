@@ -52,8 +52,8 @@ class MainWindow():
 
         # radio buttons
         self.current_state.conn_mode.set(0)
-        self.pasv_rbtn = tk.Radiobutton(login_button_frame, text="PASV", variable=self.current_state.conn_mode, value=ConnectionMode.PASV.value, command=lambda: self.pasv_rbtn_pressed())
-        self.port_rbtn = tk.Radiobutton(login_button_frame, text="PORT", variable=self.current_state.conn_mode, value=ConnectionMode.PORT.value, command=lambda: self.port_rbtn_pressed())
+        self.pasv_rbtn = tk.Radiobutton(login_button_frame, text="PASV", variable=self.current_state.conn_mode, value=ConnectionMode.PASV, command=lambda: self.pasv_rbtn_pressed())
+        self.port_rbtn = tk.Radiobutton(login_button_frame, text="PORT", variable=self.current_state.conn_mode, value=ConnectionMode.PORT, command=lambda: self.port_rbtn_pressed())
 
         self.pasv_rbtn.grid(row=1, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
         self.port_rbtn.grid(row=1, column=1, sticky=tk.N+tk.S+tk.E+tk.W)
@@ -303,7 +303,7 @@ class MainWindow():
         try:
             sk.new_folder(self.current_state, new_folder)
         except Exception as err:
-            messagebox.showerror("Error", str(err))
+            messagebox.showerror("Error", "Folder make error:" +  str(err))
 
         self.refresh_list()
 
@@ -318,15 +318,14 @@ class MainWindow():
 
         filename = self.files_box.get(tk.ACTIVE)
         destination = filedialog.askdirectory()
-        print(destination)
 
         if not filename or not destination:
             return
 
         try:
-            sk.download(self.current_state, filename, destination, self.trf_progress)
+            sk.download(self.current_state, filename, destination)
         except Exception as err:
-            messagebox.showerror("Error", str(err))
+            messagebox.showerror("Error", "Download error: " + str(err))
 
     def upload_btn_pressed(self):
 
@@ -343,7 +342,7 @@ class MainWindow():
         try:
             sk.upload(self.current_state, filename)
         except Exception as err:
-            messagebox.showerror("Error", str(err))
+            messagebox.showerror("Error", "Upload error: " + str(err))
 
         self.refresh_list()
 
@@ -369,6 +368,7 @@ class MainWindow():
             messagebox.showerror("Error", str(err))
 
         self.current_state.cwd = ""
+        self.display_cwd.set("CWD: None")
         self.display_cwd.set("CWD: None")
         self.current_state.file_list = []
         self.current_state.conn_status.set("NOT CONNECTED")
