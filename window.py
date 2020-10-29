@@ -339,6 +339,9 @@ class MainWindow():
 
         filename = filedialog.askopenfilename()
 
+        if not filename:
+            return 
+
         try:
             sk.upload(self.current_state, filename)
         except Exception as err:
@@ -369,10 +372,12 @@ class MainWindow():
 
         self.current_state.cwd = ""
         self.display_cwd.set("CWD: None")
-        self.display_cwd.set("CWD: None")
         self.current_state.file_list = []
         self.current_state.conn_status.set("NOT CONNECTED")
         self.connect_status_text.configure(fg="red")
+        self.current_state.login_status = LoginStatus.LOGGED_OUT
+        self.login_btn.configure(bg="#F0F0F0", fg="black", text="Login")
+
 
         self.refresh_list()
 
