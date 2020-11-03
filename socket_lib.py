@@ -67,7 +67,7 @@ def connect_data_socket(current_state):
         end = pasv_addr.index(")")
         parse_addr_list = pasv_addr[start + 1: end].split(",")
         port = int(parse_addr_list[4]) * 256 + int(parse_addr_list[5])
-        ip = parse_addr_list[0] + "." + parse_addr_list[1] + "." +  parse_addr_list[2] + "." + parse_addr_list[3]
+        ip = parse_addr_list[0] + "." + parse_addr_list[1] + "." + parse_addr_list[2] + "." + parse_addr_list[3]
 
         # connect to data socket
         current_state.data_socket.connect((ip, port))
@@ -105,32 +105,28 @@ def login(current_state):
     USER_command = ("USER " + current_state.username.get() + "\r\n").encode(FORMAT)
     PASS_command = ("PASS " + current_state.password.get() + "\r\n").encode(FORMAT)
 
-    try:
-        current_state.socket.sendall(USER_command)
-        current_message = current_state.status_bar.get()
-        user_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT)
-        current_state.status_bar.set(user_response.replace("\r\n", "\n"))
-        
-        current_state.socket.sendall(PASS_command)
-        current_message = current_state.status_bar.get()
-        pass_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT)
-        current_state.status_bar.set(pass_response.replace("\r\n", "\n"))
+    current_state.socket.sendall(USER_command)
+    current_message = current_state.status_bar.get()
+    user_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT)
+    current_state.status_bar.set(user_response.replace("\r\n", "\n"))
 
-        if user_response[0] == "5" or pass_response[0] == "5":
-            return user_response, pass_response
+    if user_response[0] != "3":
+        raise Exception("Incorrect username!")
 
-        # send transfer type to user
-        current_state.socket.sendall("TYPE I\r\n".encode(FORMAT))
-        type_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
-        current_state.status_bar.set(type_response)
+    current_state.socket.sendall(PASS_command)
+    current_message = current_state.status_bar.get()
+    pass_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT)
+    current_state.status_bar.set(pass_response.replace("\r\n", "\n"))
 
-        set_pasv(current_state)
+    if pass_response[0] != "2":
+        raise Exception("Incorrect password!")
 
-        get_file_list(current_state)
-        
-        return user_response, pass_response
-    except socket.error as err:
-        return err
+    # send transfer type to user
+    current_state.socket.sendall("TYPE I\r\n".encode(FORMAT))
+    type_response = current_state.socket.recv(BUFFER_SIZE).decode(FORMAT).replace("\r\n", "")
+    current_state.status_bar.set(type_response)
+
+    set_pasv(current_state)
 
 
 # retain only the filename of the entries

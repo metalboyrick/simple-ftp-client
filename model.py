@@ -38,7 +38,7 @@ class State():
         self.conn_mode.set(ConnectionMode.PASV)
 
         # some test values
-        self.username.set("android")
-        self.password.set("android")
-        self.ip_addr.set("192.168.5.8")
-        self.port.set(6969)
+        self.username.set("ftp2020")
+        self.password.set("ftp2020")
+        self.ip_addr.set("166.111.80.127")
+        self.port.set(40121)

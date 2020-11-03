@@ -137,6 +137,10 @@ class MainWindow():
         self.upload_btn = tk.Button(self.upload_button_frame, text="Upload", command=lambda: self.upload_btn_pressed(), width=30)
         self.upload_btn.grid(row=0,column=1)
 
+        self.refresh_btn = tk.Button(window, text="Show/Refresh files", command=lambda: self.refresh_btn_pressed(),
+                                    width=30)
+        self.refresh_btn.pack()
+
     # ============================================ right click options ==============================================
     # right click menu for file box
     def pop_rc_menu(self, event):
@@ -212,22 +216,11 @@ class MainWindow():
             messagebox.showerror(title="Error", message="Already logged in!")
             return
 
-        user_response, pass_response = sk.login(self.current_state)
-
-        # server responds OK.
-        if user_response[0] == "3" and pass_response[0] =="2":
+        try:
+            sk.login(self.current_state)
             self.current_state.login_status = LoginStatus.LOGGED_IN
-            self.login_btn.configure(bg="green", fg="white", text="Logged in")
-            self.display_cwd.set("CWD: /")
-            self.refresh_list()
-
-        # server responds 5XX Error.
-        elif user_response[0] == "5" or pass_response[0] == "5":
-            messagebox.showerror(title="Error", message="Authentication failed!")
-
-        # other exceptions
-        else:
-            messagebox.showerror(title="Error", message="Unknown Error!")
+        except Exception as err:
+            messagebox.showerror(title="Error", message="Login error: " + str(err))
 
     def connect_btn_pressed(self):
         if self.current_state.conn_status.get() == "CONNECTED":
@@ -378,6 +371,22 @@ class MainWindow():
         self.current_state.login_status = LoginStatus.LOGGED_OUT
         self.login_btn.configure(bg="#F0F0F0", fg="black", text="Login")
 
+        self.refresh_list()
+
+    def refresh_btn_pressed(self):
+        if self.current_state.conn_status.get() == "NOT CONNECTED":
+            messagebox.showerror(title="Error", message="Please connect first!")
+            return
+
+        if self.current_state.login_status != LoginStatus.LOGGED_IN:
+            messagebox.showerror(title="Error", message="Please log in first!")
+            return
+
+        try:
+            sk.get_file_list(self.current_state)
+        except Exception as err:
+            messagebox.showerror(title="Error", message="LIST error: " + str(err))
 
         self.refresh_list()
+
 
